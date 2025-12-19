@@ -1,16 +1,16 @@
 #include "GnssReader.h"
 #include "../utils/StringUtils.h"
 
-#include <iostream>
 #include <boost/asio/read_until.hpp>
 
 #include "../utils/NMEAUtils.h"
+#include "../logging/Logger.h"
 
 GnssReader::GnssReader(boost::asio::io_context& ioCtx): serialPort(ioCtx) {
     boost::system::error_code ec;
     serialPort.open("/dev/ttyACM0", ec);
     if(ec) {
-        std::cerr << "Error opening GNSS serial port: " << ec.message() << std::endl;
+        Logger::instance().error("GnssReader", "Error opening GNSS serial port: " + ec.message());
         return;
     }
     readOperation();
@@ -26,7 +26,7 @@ void GnssReader::readHandler(const boost::system::error_code &ec, std::size_t le
         std::istream(&buffer) >> line;
         handlePacket(line);
     } else {
-        std::cerr << "Error receiving data form serial port " << ec.message() << std::endl;
+        Logger::instance().error("GnssReader", "Error receiving data from serial port: " + ec.message());
     }
     readOperation();
 }
@@ -34,19 +34,19 @@ void GnssReader::readHandler(const boost::system::error_code &ec, std::size_t le
 void GnssReader::handlePacket(const std::string& line) {
     size_t splitPos = line.find_first_of(',');
     if(splitPos == std::string::npos || splitPos == 0) {
-        // std::cout << "Invalid line format, cannot parse token" << std::endl;
-        // std::cout << "LINE: " << line << std::endl;
+        Logger::instance().warn("GnssReader", "Invalid line format, cannot parse token");
+        Logger::instance().debug("GnssReader", "LINE: " + line);
         return;
     }
     std::string token = line.substr(0, splitPos);
     if(token.at(0) != '$'){
-        std::cout << "Invalid token start char: " << token << std::endl;
-        std::cout << "LINE: " << line << std::endl;
+        Logger::instance().warn("GnssReader", "Invalid token start char: " + token );
+        Logger::instance().debug("GnssReader", "LINE: " + line);
         return;
     }
     if(line.at(line.size()-3) != '*') {
-        std::cout << "No checksum in " << token << " message" << std::endl;
-        std::cout << "LINE: " << line << std::endl;
+        Logger::instance().warn("GnssReader", "No checksum in " + token + "message");
+        Logger::instance().debug("GnssReader", "LINE: " + line);
         return;
     }
     //TODO: Validate checksum
@@ -88,8 +88,8 @@ void GnssReader::handlePacket(const std::string& line) {
         case stringHash("$GNVTG"): {
             break;
         }
-    default:
-        std::cout << "Unhandled token " << token << std::endl;
+        default:
+        Logger::instance().debug("GnssReader", "Unknown token: " + token);
     }
 }
 
@@ -122,7 +122,7 @@ void GnssReader::handleUbx(const std::string& line) {
             break;
         }
     default:
-        std::cout << "Unhandled UBX Message type " << split[0] << std::endl;
+        Logger::instance().debug("GnssReader", "Unknown UBX token: " + split[0]);
     }
 }
 

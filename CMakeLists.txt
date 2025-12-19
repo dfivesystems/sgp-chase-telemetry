@@ -9,7 +9,9 @@ find_package(Boost REQUIRED)
 add_executable(sgp_chase_telemetry main.cpp
         utils/NMEAUtils.h
         gnss/GnssReader.cpp
-        gnss/GnssReader.h)
+        gnss/GnssReader.h
+        logging/Logger.cpp
+        logging/Logger.h)
 
 if(TARGET Boost::headers)
     target_link_libraries(sgp_chase_telemetry PRIVATE Boost::headers)
