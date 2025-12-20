@@ -4,19 +4,21 @@ project(sgp_chase_telemetry)
 set(CMAKE_CXX_STANDARD 20)
 
 find_package(Threads REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS json)
 
 add_executable(sgp_chase_telemetry main.cpp
         utils/NMEAUtils.h
         gnss/GnssReader.cpp
         gnss/GnssReader.h
         logging/Logger.cpp
-        logging/Logger.h)
+        logging/Logger.h
+        config/ConfigProvider.cpp
+        config/ConfigProvider.h)
 
 if(TARGET Boost::headers)
-    target_link_libraries(sgp_chase_telemetry PRIVATE Boost::headers)
+    target_link_libraries(sgp_chase_telemetry PRIVATE Boost::headers Boost::json)
 elseif(TARGET Boost::boost) # FindBoost module
-    target_link_libraries(sgp_chase_telemetry PRIVATE Boost::boost)
+    target_link_libraries(sgp_chase_telemetry PRIVATE Boost::boost Boost::json)
 else()
     target_include_directories(sgp_chase_telemetry PRIVATE ${Boost_INCLUDE_DIRS})
 endif()

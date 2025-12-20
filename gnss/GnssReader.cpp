@@ -6,9 +6,10 @@
 #include "../utils/NMEAUtils.h"
 #include "../logging/Logger.h"
 
-GnssReader::GnssReader(boost::asio::io_context& ioCtx): serialPort(ioCtx) {
+GnssReader::GnssReader(boost::asio::io_context& ioCtx, const std::string& port): serialPort_(ioCtx) {
+    Logger::instance().info("GnssReader", "Initializing GnssReader on port " + port);
     boost::system::error_code ec;
-    serialPort.open("/dev/ttyACM0", ec);
+    serialPort_.open(port, ec);
     if(ec) {
         Logger::instance().error("GnssReader", "Error opening GNSS serial port: " + ec.message());
         return;
@@ -17,13 +18,13 @@ GnssReader::GnssReader(boost::asio::io_context& ioCtx): serialPort(ioCtx) {
 }
 
 void GnssReader::readOperation() {
-    boost::asio::async_read_until(serialPort, buffer, "\r\n", [this](const boost::system::error_code ec, std::size_t length) { readHandler(ec, length); });
+    boost::asio::async_read_until(serialPort_, buffer_, "\r\n", [this](const boost::system::error_code ec, std::size_t length) { readHandler(ec, length); });
 }
 
 void GnssReader::readHandler(const boost::system::error_code &ec, std::size_t length) {
     if(!ec) {
         std::string line;
-        std::istream(&buffer) >> line;
+        std::istream(&buffer_) >> line;
         handlePacket(line);
     } else {
         Logger::instance().error("GnssReader", "Error receiving data from serial port: " + ec.message());

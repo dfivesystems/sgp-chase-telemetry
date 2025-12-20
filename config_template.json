@@ -1,0 +1,23 @@
+{
+  "assetName": "",
+  "riedelBoatNumber": 1,
+  "serialPort": "/dev/ttyACM0",
+  "influxAddress": "http://grafana.sgp.riedel.events",
+  "mdssAddress": "10.111.0.1",
+  "plotterAddress": "172.16.1.31",
+  "nmeaPgnFilter": [
+    123,
+    456
+  ],
+  "nmeaInstanceMapping": {
+    "123": {
+      "0": "House Battery",
+      "1": "Port Start Battery",
+      "2": "Stbd Start Battery"
+    },
+    "456": {
+      "0": "Port Engine",
+      "1": "Stbd Engine"
+    }
+  }
+}

@@ -2,6 +2,7 @@
 #include <thread>
 #include <boost/asio/io_context.hpp>
 
+#include "config/ConfigProvider.h"
 #include "gnss/GnssReader.h"
 #include "logging/Logger.h"
 
@@ -13,12 +14,15 @@ int main() {
     Logger::instance().info("main",  "Locking tractor beam");
     Logger::instance().info("main",  "Energizing warp core");
     Logger::instance().info("main",  "Brewing tea");
+    //TODO: Parameterize with arguments
+    ConfigProvider::instance().loadConfig("../config_template.json");
+
     boost::asio::io_context ioCtx;
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_{ioCtx.get_executor()};
     std::thread ioThread = std::thread([&]() {
         ioCtx.run();
     });
-    GnssReader reader(ioCtx);
+    GnssReader reader(ioCtx, ConfigProvider::instance().serialPort());
 
     ioThread.join();
     return 0;
