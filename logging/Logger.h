@@ -14,7 +14,7 @@ public:
     void critical(std::string className, std::string msg);
 
 private:
-    Logger() {};
+    Logger() = default;
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 

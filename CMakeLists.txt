@@ -13,7 +13,11 @@ add_executable(sgp_chase_telemetry main.cpp
         logging/Logger.cpp
         logging/Logger.h
         config/ConfigProvider.cpp
-        config/ConfigProvider.h)
+        config/ConfigProvider.h
+        event/Event.cpp
+        event/Event.h
+        event/EventDispatcher.cpp
+        event/EventDispatcher.h)
 
 if(TARGET Boost::headers)
     target_link_libraries(sgp_chase_telemetry PRIVATE Boost::headers Boost::json)

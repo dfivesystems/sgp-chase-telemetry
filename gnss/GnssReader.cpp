@@ -3,6 +3,8 @@
 
 #include <boost/asio/read_until.hpp>
 
+#include "../event/Event.h"
+#include "../event/EventDispatcher.h"
 #include "../utils/NMEAUtils.h"
 #include "../logging/Logger.h"
 
@@ -111,7 +113,18 @@ void GnssReader::handleUbx(const std::string& line) {
             double ageC = strtod(split[13].c_str(), nullptr);
             double hdop = strtod(split[14].c_str(), nullptr);
 
-            //TODO: Send location message
+            auto ev = std::make_shared<GNSSPositionEvent>();
+            ev->setLatitude(lat);
+            ev->setLongitude(lon);
+            ev->setAltitude(alt);
+            ev->setHdop(hdop);
+            ev->setHAccuracy(hAcc);
+            ev->setVAccuracy(vAcc);
+            ev->setSpeed(spd);
+            ev->setHeading(hdg);
+            ev->setVVelocity(vVel);
+            ev->setCorrectionAge(ageC);
+            EventDispatcher::instance().dispatchAsync(ev);
             break;
         }
         case stringHash("03"): {
@@ -135,7 +148,12 @@ void GnssReader::handleRmc(const std::string& line) {
     double spd = strtod(split[6].c_str(), nullptr);
     double hdg = strtod(split[7].c_str(), nullptr);
 
-    //TODO: Send location message
+    auto ev = std::make_shared<GNSSPositionEvent>();
+    ev->setLatitude(lat);
+    ev->setLongitude(lon);
+    ev->setSpeed(spd);
+    ev->setHeading(hdg);
+    EventDispatcher::instance().dispatchAsync(ev);
 }
 
 
