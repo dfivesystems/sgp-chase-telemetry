@@ -24,9 +24,13 @@ void GnssReader::readOperation() {
 }
 
 void GnssReader::readHandler(const boost::system::error_code &ec, std::size_t length) {
+    Logger::instance().trace("GnssReader", "Read " + std::to_string(length) + " bytes");
     if(!ec) {
         std::string line;
-        std::istream(&buffer_) >> line;
+        std::istream is(&buffer_);
+        std::getline(is, line);
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
         handlePacket(line);
     } else {
         Logger::instance().error("GnssReader", "Error receiving data from serial port: " + ec.message());
@@ -36,6 +40,7 @@ void GnssReader::readHandler(const boost::system::error_code &ec, std::size_t le
 
 void GnssReader::handlePacket(const std::string& line) {
     size_t splitPos = line.find_first_of(',');
+    size_t starPos = line.find_last_of('*');
     if(splitPos == std::string::npos || splitPos == 0) {
         Logger::instance().warn("GnssReader", "Invalid line format, cannot parse token");
         Logger::instance().debug("GnssReader", "LINE: " + line);
@@ -48,53 +53,79 @@ void GnssReader::handlePacket(const std::string& line) {
         return;
     }
     if(line.at(line.size()-3) != '*') {
-        Logger::instance().warn("GnssReader", "No checksum in " + token + "message");
+        Logger::instance().warn("GnssReader", "No checksum in " + token + " message");
         Logger::instance().debug("GnssReader", "LINE: " + line);
         return;
     }
-    //TODO: Validate checksum
+    if (!validateChecksum(line)) {
+        Logger::instance().warn("GnssReader", "Invalid checksum in " + token + " message");
+        Logger::instance().debug("GnssReader", "LINE: " + line);
+        return;
+    }
     //TODO: add missing handlers
-    std::string stripped = line.substr(splitPos+1, line.size()-3);
-    switch(stringHash(token.c_str())) {
-        case stringHash("$PUBX"): {
-            handleUbx(stripped);
+    std::string talker;
+    std::string sentenceId;
+    std::string sentence = line.substr(splitPos+1, starPos-7);
+    if (token == "$PUBX") {
+        handleUbx(sentence);
+    }
+    talker = token.substr(1, 2);
+    sentenceId = token.substr(3, 3);
+    switch(stringHash(sentenceId.c_str())) {
+        case stringHash("RMC"): {
+            handleRmc(talker, sentence);
             break;
         }
-        case stringHash("$GNRMC"): {
-            handleRmc(stripped);
+        case stringHash("GGA"): {
+            handleGga(talker, sentence);
             break;
         }
-        case stringHash("$GNGGA"): {
+        case stringHash("GSA"): {
+            handleGsa(talker, sentence);
             break;
         }
-        case stringHash("$GNGSA"): {
+        case stringHash("GSV"): {
+            handleGsv(talker, sentence);
             break;
         }
-        case stringHash("$GPGSV"): {
+        case stringHash("GLL"): {
+            handleGll(talker, sentence);
             break;
         }
-        case stringHash("$GLGSV"): {
+        case stringHash("VTG"): {
+            handleVtg(talker, sentence);
             break;
         }
-        case stringHash("$GAGSV"): {
-            break;
-        }
-        case stringHash("$GBGSV"): {
-            break;
-        }
-        case stringHash("$GQGSV"): {
-            break;
-        }
-        case stringHash("$GNGLL"): {
-            break;
-        }
-        case stringHash("$GNVTG"): {
+        case stringHash("TXT"): {
+            handleTxt(sentence);
             break;
         }
         default:
         Logger::instance().debug("GnssReader", "Unknown token: " + token);
     }
 }
+
+bool GnssReader::validateChecksum(const std::string &line) {
+    if (line.empty() || line[0] != '$')
+        return false;
+
+    auto star = line.find_last_of('*');
+    if (star == std::string::npos || star + 2 >= line.size())
+        return false;
+
+    unsigned char checksum = 0;
+    for (size_t i = 1; i < star; ++i)
+        checksum ^= static_cast<unsigned char>(line[i]);
+
+    auto hex = line.substr(star + 1, 2);
+    if (!std::isxdigit(hex[0]) || !std::isxdigit(hex[1]))
+        return false;
+
+    unsigned int expected = std::stoul(hex, nullptr, 16);
+
+    return checksum == expected;
+}
+
 
 void GnssReader::handleUbx(const std::string& line) {
     auto split = splitString(line, ',');
@@ -140,7 +171,8 @@ void GnssReader::handleUbx(const std::string& line) {
     }
 }
 
-void GnssReader::handleRmc(const std::string& line) {
+void GnssReader::handleRmc(const std::string& talker, const std::string& line) {
+    //TODO: Add talker handling
     auto split = splitString(line, ',');
 
     double lat = nmeaPositionToDecimal(split[2], split[3]);
@@ -154,6 +186,27 @@ void GnssReader::handleRmc(const std::string& line) {
     ev->setSpeed(spd);
     ev->setHeading(hdg);
     EventDispatcher::instance().dispatchAsync(ev);
+}
+
+void GnssReader::handleTxt(const std::string& line) {
+    auto split = splitString(line, ',');
+    switch (stringHash(split[2].c_str())) {
+        case stringHash("00"): {
+            Logger::instance().error("GnssReader::handleTxt", split[3]);
+            break;
+        }
+        case stringHash("01"): {
+            Logger::instance().warn("GnssReader::handleTxt", split[3]);
+            break;
+        }
+        case stringHash("02"):
+        case stringHash("03"): {
+            Logger::instance().info("GnssReader::handleTxt", split[3]);
+            break;
+        }
+        default:
+            Logger::instance().info("GnssReader::handleTxt", "Unknown Text message level " + split[3]);
+    }
 }
 
 

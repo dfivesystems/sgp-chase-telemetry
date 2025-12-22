@@ -14,11 +14,20 @@ private:
     void readOperation();
     void readHandler(const boost::system::error_code &ec, std::size_t length);
     void handlePacket(const std::string& line);
+    bool validateChecksum(const std::string& line);
+
     std::array<char, 1024> dataBuf_ = {};
     boost::asio::streambuf buffer_;
 
-    void handleUbx(const std::string& string);
-    void handleRmc(const std::string &line);
+    void handleUbx(const std::string& sentence);
+    void handleRmc(const std::string& talker, const std::string& sentence);
+    void handleGga(const std::string& talker, const std::string& sentence);
+    void handleGsa(const std::string& talker, const std::string& sentence);
+    void handleGsv(const std::string& talker, const std::string& sentence);
+    void handleGll(const std::string& talker, const std::string& sentence);
+    void handleVtg(const std::string& talker, const std::string& sentence);
+
+    void handleTxt(const std::string &line);
 };
 
 
