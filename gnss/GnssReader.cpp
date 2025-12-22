@@ -3,7 +3,6 @@
 
 #include <boost/asio/read_until.hpp>
 
-#include "../event/Event.h"
 #include "../event/EventDispatcher.h"
 #include "../utils/NMEAUtils.h"
 #include "../logging/Logger.h"
@@ -68,11 +67,14 @@ void GnssReader::handlePacket(const std::string& line) {
     std::string sentence = line.substr(splitPos+1, starPos-7);
     if (token == "$PUBX") {
         handleUbx(sentence);
+        return;
     }
     talker = token.substr(1, 2);
     sentenceId = token.substr(3, 3);
+    Logger::instance().trace("GnssReader", line);
     switch(stringHash(sentenceId.c_str())) {
         case stringHash("RMC"): {
+            //Probably noop this
             handleRmc(talker, sentence);
             break;
         }
@@ -85,10 +87,12 @@ void GnssReader::handlePacket(const std::string& line) {
             break;
         }
         case stringHash("GSV"): {
+            //Probably noop this
             handleGsv(talker, sentence);
             break;
         }
         case stringHash("GLL"): {
+            //Probably noop this
             handleGll(talker, sentence);
             break;
         }
@@ -155,15 +159,16 @@ void GnssReader::handleUbx(const std::string& line) {
             ev->setHeading(hdg);
             ev->setVVelocity(vVel);
             ev->setCorrectionAge(ageC);
+            ev->setConstellation(COMBINED);
             EventDispatcher::instance().dispatchAsync(ev);
             break;
         }
         case stringHash("03"): {
-            //Sat Status
+            //TODO: Sat Status
             break;
         }
         case stringHash("04"): {
-            //TOD
+            //TODO: Time of day
             break;
         }
     default:
@@ -172,7 +177,6 @@ void GnssReader::handleUbx(const std::string& line) {
 }
 
 void GnssReader::handleRmc(const std::string& talker, const std::string& line) {
-    //TODO: Add talker handling
     auto split = splitString(line, ',');
 
     double lat = nmeaPositionToDecimal(split[2], split[3]);
@@ -181,11 +185,87 @@ void GnssReader::handleRmc(const std::string& talker, const std::string& line) {
     double hdg = strtod(split[7].c_str(), nullptr);
 
     auto ev = std::make_shared<GNSSPositionEvent>();
+    ev->setConstellation(constellationFromTalker(talker));
     ev->setLatitude(lat);
     ev->setLongitude(lon);
     ev->setSpeed(spd);
     ev->setHeading(hdg);
     EventDispatcher::instance().dispatchAsync(ev);
+}
+
+void GnssReader::handleGga(const std::string& talker, const std::string& sentence) {
+    auto split = splitString(sentence, ',');
+    //TOD - split[0]
+    double lat = nmeaPositionToDecimal(split[1], split[2]);
+    double lon = nmeaPositionToDecimal(split[3], split[4]);
+    N183GNSSQualityIndicator quality = static_cast<N183GNSSQualityIndicator>(strtoul(split[5].c_str(), nullptr, 10));
+    bool valid = quality != INVALID && quality != NA;
+    unsigned int svs = strtoul(split[6].c_str(), nullptr, 10);
+    double hdop = strtod(split[7].c_str(), nullptr);
+    double height = strtod(split[8].c_str(), nullptr);
+    double geoidSeparation = strtod(split[10].c_str(), nullptr);
+
+    if (valid){
+        auto ev = std::make_shared<GNSSPositionEvent>();
+        ev->setConstellation(constellationFromTalker(talker));
+        ev->setLatitude(lat);
+        ev->setLongitude(lon);
+        ev->setAltitude(height);
+        ev->setHdop(hdop);
+        //TODO: Expand event to include sat count etc
+        EventDispatcher::instance().dispatchAsync(ev);
+    } else {
+        Logger::instance().warn("GnssReader", "Position not valid: " + talker + "Gga");
+    }
+}
+
+void GnssReader::handleGsa(const std::string& talker, const std::string& sentence) {
+    //TODO: Check against real data and build from there
+}
+
+void GnssReader::handleGsv(const std::string& talker, const std::string& sentence) {
+    //TODO: Implement GSV
+    //TODO: Wait until all messages have been received then parse and send the response
+    auto ev = std::make_shared<GNSSSatellitesEvent>();
+    ev->setConstellation(constellationFromTalker(talker));
+
+    EventDispatcher::instance().dispatchAsync(ev);
+}
+
+void GnssReader::handleGll(const std::string& talker, const std::string& sentence) {
+    auto split = splitString(sentence, ',');
+    double lat = nmeaPositionToDecimal(split[0], split[1]);
+    double lon = nmeaPositionToDecimal(split[2], split[3]);
+    //TOD - split[4]
+    bool valid = split[5] == "A";
+
+    if (valid){
+        auto ev = std::make_shared<GNSSPositionEvent>();
+        ev->setConstellation(constellationFromTalker(talker));
+        ev->setLatitude(lat);
+        ev->setLongitude(lon);
+        EventDispatcher::instance().dispatchAsync(ev);
+    } else {
+        Logger::instance().warn("GnssReader", "Position not valid: " + talker + "GLL");
+    }
+}
+
+void GnssReader::handleVtg(const std::string& talker, const std::string& sentence) {
+    auto split = splitString(sentence, ',');
+    double trackDegTrue = strtod(split[0].c_str(), nullptr);
+    double trackDegMag = strtod(split[2].c_str(), nullptr);
+    double spdKts = strtod(split[4].c_str(), nullptr);
+    double speedKph = strtod(split[6].c_str(), nullptr);
+    bool valid = split[8] != "N";
+    if (valid) {
+        auto ev = std::make_shared<GNSSPositionEvent>();
+        ev->setConstellation(constellationFromTalker(talker));
+        ev->setHeading(trackDegTrue);
+        ev->setSpeed(speedKph);
+        EventDispatcher::instance().dispatchAsync(ev);
+    } else {
+        Logger::instance().warn("GnssReader", "Course not valid: " + talker + "VTG");
+    }
 }
 
 void GnssReader::handleTxt(const std::string& line) {
@@ -206,6 +286,34 @@ void GnssReader::handleTxt(const std::string& line) {
         }
         default:
             Logger::instance().info("GnssReader::handleTxt", "Unknown Text message level " + split[3]);
+    }
+}
+
+GNSSSatelliteConstellation GnssReader::constellationFromTalker(const std::string& talker) {
+    switch (stringHash(talker.c_str())){
+        case stringHash("GN"):{
+            return COMBINED;
+        }
+        case stringHash("GP"):{
+            return GPS;
+        }
+        case stringHash("GL"):{
+            return GLONASS;
+        }
+        case stringHash("GA"):{
+            return GALILEO;
+        }
+        case stringHash("GB"):{
+            return BEIDOU;
+        }
+        case stringHash("GI"):{
+            return NAVIC;
+        }
+        case stringHash("IN"):{
+            return INS;
+        }
+        default:
+        return UNKNOWN;
     }
 }
 

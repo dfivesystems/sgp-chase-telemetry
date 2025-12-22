@@ -3,6 +3,17 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/serial_port.hpp>
 #include <boost/asio/streambuf.hpp>
+#include "../event/Event.h"
+
+enum N183GNSSQualityIndicator {
+    INVALID = 0,
+    GNSS,
+    DGPS,
+    NA,
+    RTK_FIXED,
+    RTK_FLOAT,
+    INS_DR
+};
 
 class GnssReader {
 public:
@@ -26,8 +37,9 @@ private:
     void handleGsv(const std::string& talker, const std::string& sentence);
     void handleGll(const std::string& talker, const std::string& sentence);
     void handleVtg(const std::string& talker, const std::string& sentence);
-
     void handleTxt(const std::string &line);
+
+    GNSSSatelliteConstellation constellationFromTalker(const std::string &talker);
 };
 
 

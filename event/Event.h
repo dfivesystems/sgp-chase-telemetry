@@ -2,6 +2,7 @@
 #define EVENT_H
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 enum EventType{
     NONE = 0,
@@ -13,6 +14,18 @@ enum EventType{
     RTK_CORRECTION,
     COURSE_UPDATE,
     ASSET_POSITION
+};
+
+enum GNSSSatelliteConstellation {
+    UNKNOWN = 0,
+    GPS,
+    GLONASS,
+    BEIDOU,
+    GALILEO,
+    QZSS,
+    NAVIC,
+    INS,
+    COMBINED
 };
 
 class Event {
@@ -89,6 +102,8 @@ public:
     void setCorrectionAge(double correction_age);
     [[nodiscard]] double hdop() const;
     void setHdop(double hdop);
+    [[nodiscard]] GNSSSatelliteConstellation constellation() const;
+    void setConstellation(GNSSSatelliteConstellation constellation);
 
 private:
     double latitude_ = NAN;
@@ -101,16 +116,7 @@ private:
     double vVelocity_ = NAN;
     double correctionAge_ = NAN;
     double hdop_ = NAN;
-};
-
-enum GNSSSatelliteConstellations {
-    GPS,
-    GLONASS,
-    BEIDOU,
-    GALILEO,
-    QZSS,
-    NAVIC,
-    COMBINED
+    GNSSSatelliteConstellation constellation_ = UNKNOWN;
 };
 
 struct GNSSSatelliteRecord {
@@ -128,13 +134,13 @@ public:
     [[nodiscard]] int satsInView() const;
     void addSatelliteRecord(GNSSSatelliteRecord record);
     [[nodiscard]] std::vector<GNSSSatelliteRecord> satellites() const;
-    void setConstellation(GNSSSatelliteConstellations constellation);
-    [[nodiscard]] GNSSSatelliteConstellations constellation() const;
+    void setConstellation(GNSSSatelliteConstellation constellation);
+    [[nodiscard]] GNSSSatelliteConstellation constellation() const;
 
 private:
     unsigned int satsInView_ = 0;
     std::vector<GNSSSatelliteRecord> satellites_;
-    GNSSSatelliteConstellations constellation_ = GNSSSatelliteConstellations::GPS;
+    GNSSSatelliteConstellation constellation_ = GNSSSatelliteConstellation::GPS;
 };
 
 class GNSSTodEvent: public Event {

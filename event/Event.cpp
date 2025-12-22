@@ -145,6 +145,14 @@ void GNSSPositionEvent::setHdop(double hdop) {
     hdop_ = hdop;
 }
 
+GNSSSatelliteConstellation GNSSPositionEvent::constellation() const {
+    return constellation_;
+}
+
+void GNSSPositionEvent::setConstellation(GNSSSatelliteConstellation constellation){
+    constellation_ = constellation;
+}
+
 GNSSSatellitesEvent::GNSSSatellitesEvent() {
     eventType_ = EventType::GNSS_SATELLITES;
 }
@@ -165,10 +173,10 @@ std::vector<GNSSSatelliteRecord> GNSSSatellitesEvent::satellites() const {
     return satellites_;
 }
 
-void GNSSSatellitesEvent::setConstellation(GNSSSatelliteConstellations constellation) {
+void GNSSSatellitesEvent::setConstellation(GNSSSatelliteConstellation constellation) {
     constellation_ = constellation;
 }
 
-GNSSSatelliteConstellations GNSSSatellitesEvent::constellation() const {
+GNSSSatelliteConstellation GNSSSatellitesEvent::constellation() const {
     return constellation_;
 }
