@@ -2,6 +2,8 @@
 #include <thread>
 #include <boost/asio/io_context.hpp>
 
+#include "canbus/AsioCanSocket.h"
+#include "canbus/N2KPropertyProvider.h"
 #include "config/ConfigProvider.h"
 #include "event/EventDispatcher.h"
 #include "gnss/GnssReader.h"

@@ -17,7 +17,17 @@ add_executable(sgp_chase_telemetry main.cpp
         event/Event.cpp
         event/Event.h
         event/EventDispatcher.cpp
-        event/EventDispatcher.h)
+        event/EventDispatcher.h
+        canbus/AsioCanSocket.cpp
+        canbus/AsioCanSocket.h
+        canbus/CanDevice.h
+        canbus/CanMessage.h
+        canbus/J1939Frame.h
+        canbus/N2KProperty.h
+        canbus/N2KPropertyProvider.cpp
+        canbus/N2KPropertyProvider.h
+        utils/TimeUtils.h
+)
 
 if(TARGET Boost::headers)
     target_link_libraries(sgp_chase_telemetry PRIVATE Boost::headers Boost::json)
