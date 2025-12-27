@@ -29,8 +29,8 @@ static std::string getHexStringFromBuffer(char* buffer, size_t startPos, size_t 
 
 static std::string toLower(const std::string& inStr){
     std::string outStr;
-    std::transform(inStr.begin(), inStr.end(),
-    outStr.begin(),[](unsigned char c){ return std::tolower(c); });
+    std::ranges::transform(inStr,
+                           outStr.begin(),[](unsigned char c){ return std::tolower(c); });
     return outStr;
 }
 

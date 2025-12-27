@@ -62,14 +62,13 @@ void GnssReader::handlePacket(const std::string& line) {
         return;
     }
     //TODO: add missing handlers
-    std::string talker;
     std::string sentenceId;
-    std::string sentence = line.substr(splitPos+1, starPos-7);
+    const std::string sentence = line.substr(splitPos+1, starPos-7);
     if (token == "$PUBX") {
         handleUbx(sentence);
         return;
     }
-    talker = token.substr(1, 2);
+    const std::string talker = token.substr(1, 2);
     sentenceId = token.substr(3, 3);
     Logger::instance().trace("GnssReader", line);
     switch(stringHash(sentenceId.c_str())) {
@@ -237,9 +236,8 @@ void GnssReader::handleGll(const std::string& talker, const std::string& sentenc
     double lat = nmeaPositionToDecimal(split[0], split[1]);
     double lon = nmeaPositionToDecimal(split[2], split[3]);
     //TOD - split[4]
-    bool valid = split[5] == "A";
 
-    if (valid){
+    if (bool valid = split[5] == "A"){
         auto ev = std::make_shared<GNSSPositionEvent>();
         ev->setConstellation(constellationFromTalker(talker));
         ev->setLatitude(lat);
@@ -256,8 +254,7 @@ void GnssReader::handleVtg(const std::string& talker, const std::string& sentenc
     double trackDegMag = strtod(split[2].c_str(), nullptr);
     double spdKts = strtod(split[4].c_str(), nullptr);
     double speedKph = strtod(split[6].c_str(), nullptr);
-    bool valid = split[8] != "N";
-    if (valid) {
+    if (bool valid = split[8] != "N") {
         auto ev = std::make_shared<GNSSPositionEvent>();
         ev->setConstellation(constellationFromTalker(talker));
         ev->setHeading(trackDegTrue);

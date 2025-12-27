@@ -84,17 +84,17 @@ void AsioCanSocket::processAddressClaim(CanMessage &msg) {
 //            If someone has the same address as us, calculate our name vs theirs
         Logger::instance().info("AsioCanSocket", "Address claim requested");
         const unsigned long localNameInt = nameFromBytes(calculateLocalName().data());
-        if(auto remoteName = msg.data(); remoteName.size() < 8){
+        if(const auto remoteName = msg.data(); remoteName.size() < 8){
             return;
         }
-        if(unsigned long remoteNameInt = nameFromBytes(msg.data().data()); localNameInt > remoteNameInt){
+        if(const unsigned long remoteNameInt = nameFromBytes(msg.data().data()); localNameInt > remoteNameInt){
             //We lose the contention
             Logger::instance().error("AsioCanSocket", "Address claim lost");
             localAddress_ +=1;
             addressClaim();
         }
     }
-    if(CanDevice* device = getOrCreateDevice(msg.source()); !device->detailsInitialised) {
+    if(const CanDevice* device = getOrCreateDevice(msg.source()); !device->detailsInitialised) {
         genericISORequest(126996, msg.source());
     }
 }
@@ -221,7 +221,7 @@ void AsioCanSocket::handleCompleteMessage(CanMessage &msg) {
         }
 
         default:{
-            auto ev = std::make_shared<NMEAPropertyEvent>(device->uid);
+            const auto ev = std::make_shared<NMEAPropertyEvent>(device->uid);
             for(const auto& [key, val] : msg.stringMap()){
                 //Only send update if values have changed
                 if(device->updateValue(key, msg.instance(), val)){
@@ -237,7 +237,7 @@ void AsioCanSocket::handleCompleteMessage(CanMessage &msg) {
 }
 
 void AsioCanSocket::write(const uint32_t pgn, const uint8_t remoteAddress, const uint8_t priority, const uint8_t* data, const uint8_t dataSize){
-    if(auto dpc = N2KPropertyProvider::instance().getPropertyContainer(std::to_string(pgn)); nullptr != dpc && !dpc->singleFrame){
+    if(const auto dpc = N2KPropertyProvider::instance().getPropertyContainer(std::to_string(pgn)); nullptr != dpc && !dpc->singleFrame){
         const int frameCount = static_cast<int>(std::ceil(dataSize / 7.0));
         uint8_t packetId = 0b00100000;
         const uint8_t payloadLen = dataSize;

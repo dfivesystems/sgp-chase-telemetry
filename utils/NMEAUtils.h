@@ -9,12 +9,12 @@ double nmeaPositionToDecimal(const std::string& nmeaCoordinate, const std::strin
         // For longitude, the format is DDDMM.MMMM
 
         // Determine the number of degree digits based on the length of the string
-        size_t degreeDigits = (direction == "E" || direction == "W") ? 3 : 2;
+        const size_t degreeDigits = (direction == "E" || direction == "W") ? 3 : 2;
 
         // Extract degrees
         degrees = std::stod(nmeaCoordinate.substr(0, degreeDigits));
         // Extract minutes
-        double minutes = std::stod(nmeaCoordinate.substr(degreeDigits));
+        const double minutes = std::stod(nmeaCoordinate.substr(degreeDigits));
 
         // Convert to decimal degrees
         degrees += (minutes / 60.0);

@@ -130,7 +130,7 @@ class GNSSSatellitesEvent: public Event {
 public:
     GNSSSatellitesEvent();
 
-    void setSatsInView(const int satsInView);
+    void setSatsInView(int satsInView);
     [[nodiscard]] int satsInView() const;
     void addSatelliteRecord(GNSSSatelliteRecord record);
     [[nodiscard]] std::vector<GNSSSatelliteRecord> satellites() const;

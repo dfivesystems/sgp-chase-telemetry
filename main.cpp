@@ -21,6 +21,7 @@ int main() {
     ConfigProvider::instance().loadConfig("../config_template.json");
     //Dummy call to start threads
     EventDispatcher::instance();
+    N2KPropertyProvider::instance().loadProperties();
 
     boost::asio::io_context ioCtx;
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_{ioCtx.get_executor()};
@@ -28,6 +29,7 @@ int main() {
         ioCtx.run();
     });
     GnssReader reader(ioCtx, ConfigProvider::instance().serialPort());
+    AsioCanSocket canSkt("vcan0", ioCtx);
 
     ioThread.join();
     return 0;

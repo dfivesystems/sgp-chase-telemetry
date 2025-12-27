@@ -22,14 +22,14 @@ EventDispatcher::~EventDispatcher() {
     }
 }
 
-void EventDispatcher::subscribe(EventType eventType, EventListener *listener) {
+void EventDispatcher::subscribe(const EventType eventType, EventListener *listener) {
     //TODO: Add event type to logging
     Logger::instance().debug("EventDispatcher", "Adding listener");
     std::cout << "Adding listener" << std::endl;
     listeners[eventType].emplace_back(listener);
 }
 
-void EventDispatcher::unsubscribe(EventType eventType, EventListener *listener) {
+void EventDispatcher::unsubscribe(const EventType eventType, EventListener *listener) {
     //TODO: Add event type to logging
     Logger::instance().debug("EventDispatcher", "Removing listener");
     listeners[eventType].remove(listener);
@@ -38,7 +38,7 @@ void EventDispatcher::unsubscribe(EventType eventType, EventListener *listener) 
 void EventDispatcher::dispatchDirect(std::shared_ptr<Event> ev) {
     //TODO: Add event type to logging
     Logger::instance().trace("EventDispatcher", "Dispatching direct event");
-    for(auto listener : listeners[ev->eventType()]){
+    for(const auto listener : listeners[ev->eventType()]){
         listener->notifyMessage(ev);
     }
 }

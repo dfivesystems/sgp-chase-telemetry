@@ -6,6 +6,8 @@
 #include <ctime>
 #include <iomanip>
 
+//TODO: Selective log levels
+
 namespace ansi {
     constexpr const char* reset   = "\033[0m";
     constexpr const char* green   = "\033[32m";
@@ -42,9 +44,9 @@ const char* Logger::levelColor(LogLevel level) {
 
 std::string Logger::iso8601Now() {
     using namespace std::chrono;
-    auto now = system_clock::now();
+    const auto now = system_clock::now();
     auto time = system_clock::to_time_t(now);
-    auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+    const auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
     std::tm tm{};
 #if defined(_WIN32)

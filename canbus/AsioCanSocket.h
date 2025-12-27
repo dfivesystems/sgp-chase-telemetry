@@ -3,27 +3,26 @@
 
 #include <iostream>
 #include <unistd.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <linux/can.h>
 #include <boost/asio.hpp>
+#include <linux/can.h>
+#include <sys/types.h>
 #include "CanDevice.h"
 #include "CanMessage.h"
 #include "J1939Frame.h"
 #include "../event/Event.h"
 #include "../event/EventDispatcher.h"
 
-static const uint16_t MFR_CODE = 1100;
-static const uint8_t DEV_CLASS = 0x19;
-static const uint8_t DEV_FUNC =  0x82;
-static const uint16_t PRODUCT_CODE = 11222;
-static const uint16_t DB_VERSION = 2101;
-static const char MODEL_ID[] = "Riedel SmartChase";
-static const char SOFTWARE_VERSION[] = "Build 0.1";
-static const char MODEL_VERSION[] = "Riedel SmartChase";
-static const char SERIAL_NO[] = "42";
-static const uint8_t CERT_LEVEL = 2;
-static const uint8_t LOAD_EQUIVALENCY = 3;
+static constexpr uint16_t MFR_CODE = 1100;
+static constexpr uint8_t DEV_CLASS = 0x19;
+static constexpr uint8_t DEV_FUNC =  0x82;
+static constexpr uint16_t PRODUCT_CODE = 11222;
+static constexpr uint16_t DB_VERSION = 2101;
+static constexpr char MODEL_ID[] = "Riedel SmartChase";
+static constexpr char SOFTWARE_VERSION[] = "Build 0.1";
+static constexpr char MODEL_VERSION[] = "Riedel SmartChase";
+static constexpr char SERIAL_NO[] = "42";
+static constexpr uint8_t CERT_LEVEL = 2;
+static constexpr uint8_t LOAD_EQUIVALENCY = 3;
 
 class AsioCanSocket: public std::enable_shared_from_this<AsioCanSocket> {
 public:

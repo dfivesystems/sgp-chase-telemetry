@@ -1,8 +1,8 @@
 #include "ConfigProvider.h"
 
-#include <boost/json.hpp>
 #include <fstream>
 #include <sstream>
+#include <boost/json.hpp>
 #include "../logging/Logger.h"
 
 using namespace boost::json;
@@ -89,13 +89,13 @@ ConfigProvider::nmeaInstanceMapping() const {
     return nmeaInstanceMapping_;
 }
 
-std::string ConfigProvider::lookupInstanceName(int pgn, int instance) const {
-    auto pgnIt = nmeaInstanceMapping_.find(pgn);
+std::string ConfigProvider::lookupInstanceName(const int pgn, const int instance) const {
+    const auto pgnIt = nmeaInstanceMapping_.find(pgn);
     if (pgnIt == nmeaInstanceMapping_.end()) {
         return {};
     }
 
-    auto instIt = pgnIt->second.find(instance);
+    const auto instIt = pgnIt->second.find(instance);
     if (instIt == pgnIt->second.end()) {
         return {};
     }
