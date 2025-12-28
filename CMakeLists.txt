@@ -27,6 +27,8 @@ add_executable(sgp_chase_telemetry main.cpp
         canbus/N2KPropertyProvider.cpp
         canbus/N2KPropertyProvider.h
         utils/TimeUtils.h
+        gnss/LocationProvider.cpp
+        gnss/LocationProvider.h
 )
 
 if(TARGET Boost::headers)

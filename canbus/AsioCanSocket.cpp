@@ -8,6 +8,7 @@
 
 AsioCanSocket::AsioCanSocket(const std::string& interfaceName, boost::asio::io_context& ioCtx): stream_(ioCtx){
     Logger::instance().info("AsioCanSocket", "Opening CAN socket " + interfaceName);
+    EventDispatcher::instance().subscribe(POSITION, this);
     sockaddr_can addr{};
     ifreq ifr{};
 
@@ -275,6 +276,40 @@ void AsioCanSocket::write(const uint32_t pgn, const uint8_t remoteAddress, const
     }
 }
 
+void AsioCanSocket::handlePositionEvent(const std::shared_ptr<PositionEvent>& ev) {
+    static uint8_t sid = 0;
+    const int32_t lat = ev->latitude * 1e7;
+    const int32_t lon = ev->longitude * 1e7;
+    const uint16_t hdg = ev->heading * 0.0174533 * 1e4;
+    const uint16_t spd = ev->speed * 100;
+
+    uint8_t posRapid[8];
+    uint8_t cogSog[8];
+
+    posRapid[0] = lat & 0xFF;
+    posRapid[1] = (lat >> 8) & 0xFF;
+    posRapid[2] = (lat >> 16) & 0xFF;
+    posRapid[3] = (lat >> 24) & 0xFF;
+    posRapid[4] = lon & 0xFF;
+    posRapid[5] = (lon >> 8) & 0xFF;
+    posRapid[6] = (lon >> 16) & 0xFF;
+    posRapid[7] = (lon >> 24) & 0xFF;
+
+
+    cogSog[0] = sid;
+    cogSog[1] = (1 & 0x03u) | 0xFCu;
+    cogSog[2] = hdg & 0xFF;
+    cogSog[3] = (hdg >> 8) & 0xFF;
+    cogSog[4] = spd & 0xFF;
+    cogSog[5] = (spd >> 8) & 0xFF;
+    cogSog[6] = 0xFF;
+    cogSog[7] = 0xFF;
+
+    write(129025, 255, 6, posRapid, 8);
+    write(129026, 255, 6, cogSog, 8);
+    sid++;
+}
+
 void AsioCanSocket::writeRawFrame(can_frame frame){
     stream_.async_write_some(boost::asio::buffer(&frame, sizeof(frame)),
                             [&](const boost::system::error_code &ec,
@@ -290,13 +325,22 @@ void AsioCanSocket::asyncWriteHandler(const boost::system::error_code &ec, const
 }
 
 uint32_t AsioCanSocket::generateHeader(const uint32_t pgn, const uint8_t remoteAddress, const uint8_t priority) const{
-    uint32_t header;
-    if(remoteAddress != 0){
-        header = (priority << 26) | (pgn << 8) | (remoteAddress << 8) | localAddress_;
+    uint32_t can_id = 0;
+    uint8_t pf = (pgn >> 8) & 0xFF;
+    uint8_t ps;
+    if (pf < 240) {
+        ps = remoteAddress;
     } else {
-        header = (priority << 26) | (pgn << 8) | localAddress_;
+        ps = pgn & 0xFF;
     }
-    return header;
+
+    can_id |= (priority & 0x7) << 26;
+    can_id |= (pgn & 0x1FFFF) << 8;
+    can_id &= ~(0xFF << 8);
+    can_id |= (uint32_t)ps << 8;
+    can_id |= localAddress_;
+
+    return can_id;
 }
 
 can_frame AsioCanSocket::generateFrame(const uint32_t pgn, const uint8_t remoteAddress, const uint8_t priority, const uint8_t* data) const{
@@ -306,4 +350,10 @@ can_frame AsioCanSocket::generateFrame(const uint32_t pgn, const uint8_t remoteA
     frame.can_dlc = 8;
     memcpy(frame.data, data, 8);
     return frame;
+}
+
+void AsioCanSocket::notifyMessage(std::shared_ptr<Event> ev) {
+    if (ev->eventType() == POSITION) {
+        handlePositionEvent(std::dynamic_pointer_cast<PositionEvent>(ev));
+    }
 }

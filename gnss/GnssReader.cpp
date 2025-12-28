@@ -260,7 +260,7 @@ void GnssReader::handleVtg(const std::string& talker, const std::string& sentenc
         const auto ev = std::make_shared<GNSSPositionEvent>();
         ev->constellation = constellationFromTalker(talker);
         ev->heading = trackDegTrue;
-        ev->speed = speedKph;
+        ev->speed = speedKph*0.277778;
         EventDispatcher::instance().dispatchAsync(ev);
     } else {
         Logger::instance().warn("GnssReader", "Course not valid: " + talker + "VTG");

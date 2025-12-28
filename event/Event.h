@@ -15,7 +15,13 @@ enum EventType{
     COURSE_UPDATE,
     ASSET_POSITION,
     RAG_STATUS,
-    COMMITTEE_MESSAGE
+    COMMITTEE_MESSAGE,
+    POSITION,
+};
+
+enum GNSSSource {
+    USB = 0,
+    N2K
 };
 
 enum GNSSSatelliteConstellation {
@@ -90,6 +96,7 @@ struct GNSSPositionEvent final : Event {
     double correctionAge = NAN;
     double hdop = NAN;
     GNSSSatelliteConstellation constellation = UNKNOWN;
+    GNSSSource source = USB;
 };
 
 ///
@@ -106,6 +113,7 @@ struct GNSSSatellitesEvent final : Event {
     unsigned int satsInView = 0;
     std::vector<GNSSSatelliteRecord> satellites;
     GNSSSatelliteConstellation constellation = GNSSSatelliteConstellation::GPS;
+    GNSSSource source = USB;
 };
 
 struct GNSSTodEvent final: Event {
@@ -130,6 +138,22 @@ struct RAGStatusEvent final: Event {
 
 struct CommitteeMessageEvent final: Event {
 
+};
+
+///
+/// Position events are sent by the location provider to be consumed by influx, mdss, n2k
+struct PositionEvent final: Event {
+    PositionEvent() {eventType_ = POSITION;};
+    double latitude = NAN;
+    double longitude = NAN;
+    double altitude = NAN;
+    double hAccuracy = NAN;
+    double vAccuracy = NAN;
+    double speed = NAN;
+    double heading = NAN;
+    double vVelocity = NAN;
+    double correctionAge = NAN;
+    double hdop = NAN;
 };
 
 #endif //EVENT_H

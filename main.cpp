@@ -7,6 +7,7 @@
 #include "config/ConfigProvider.h"
 #include "event/EventDispatcher.h"
 #include "gnss/GnssReader.h"
+#include "gnss/LocationProvider.h"
 #include "logging/Logger.h"
 
 int main() {
@@ -28,6 +29,7 @@ int main() {
     std::thread ioThread = std::thread([&]() {
         ioCtx.run();
     });
+    LocationProvider locationProvider(ioCtx);
     GnssReader reader(ioCtx, ConfigProvider::instance().serialPort());
     AsioCanSocket canSkt("vcan0", ioCtx);
 

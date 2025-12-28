@@ -24,13 +24,14 @@ static constexpr char SERIAL_NO[] = "42";
 static constexpr uint8_t CERT_LEVEL = 2;
 static constexpr uint8_t LOAD_EQUIVALENCY = 3;
 
-class AsioCanSocket: public std::enable_shared_from_this<AsioCanSocket> {
+class AsioCanSocket final: public EventListener {
 public:
     AsioCanSocket(const std::string& interfaceName, boost::asio::io_context& ioCtx);
     void writeRawFrame(can_frame frame);
     void readOperation();
     uint32_t generateHeader(uint32_t pgn, uint8_t remoteAddress, uint8_t priority) const;
     can_frame generateFrame(uint32_t pgn, uint8_t remoteAddress, uint8_t priority, const uint8_t* data) const;
+    void notifyMessage(std::shared_ptr<Event> ev) override;
 private:
     int sockFd_;
     boost::asio::posix::basic_stream_descriptor<> stream_;
@@ -49,10 +50,11 @@ private:
     void addressClaim();
     void write(uint32_t pgn, uint8_t remoteAddress, uint8_t priority, const uint8_t *data, uint8_t dataSize);
 
+    void handlePositionEvent(const std::shared_ptr<PositionEvent>& ev);
+
     std::array<uint8_t, 8> calculateLocalName() const;
 
     static unsigned long nameFromBytes(const uint8_t *name);
-
     unsigned int UID_ = stringHash(SERIAL_NO);
 };
 
