@@ -57,7 +57,7 @@ inline CanMessage::CanMessage(N2KContainer *property, const unsigned char length
     this->destination_ = destination;
 }
 
-inline void CanMessage::addToMessage(unsigned char frameNumber, J1939Frame &frame) {
+inline void CanMessage::addToMessage(const unsigned char frameNumber, J1939Frame &frame) {
     if (singleFrame_) {
         magic_ += 8;
         messageBytes_.assign(frame.data(), frame.data() + 8);
@@ -369,6 +369,8 @@ inline void CanMessage::populateFieldData() {
                 value = std::to_string(val);
                 break;
             }
+            default:
+                value = "";
         }
         if (field.name.find("Instance") != std::string::npos) {
             instance_ = value;

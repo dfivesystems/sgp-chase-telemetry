@@ -6,12 +6,12 @@ class Logger {
 public:
     static Logger& instance();
 
-    void trace(std::string className, std::string msg);
-    void debug(std::string className, std::string msg);
-    void info(std::string className, std::string msg);
-    void warn(std::string className, std::string msg);
-    void error(std::string className, std::string msg);
-    void critical(std::string className, std::string msg);
+    static void trace(const std::string& className, const std::string& msg);
+    static void debug(const std::string& className, const std::string& msg);
+    static void info(const std::string& className, const std::string& msg);
+    static void warn(const std::string& className, const std::string& msg);
+    static void error(const std::string& className, const std::string& msg);
+    static void critical(const std::string& className, const std::string& msg);
 
 private:
     Logger() = default;
@@ -22,11 +22,11 @@ private:
         TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL
     };
 
-    const char *levelToString(::Logger::LogLevel level);
-    const char *levelColor(::Logger::LogLevel level);
-    std::string iso8601Now();
+    static const char *levelToString(::Logger::LogLevel level);
+    static const char *levelColor(::Logger::LogLevel level);
+    static std::string iso8601Now();
 
-    void writeLog(LogLevel level, std::string className, std::string msg);
+    static void writeLog(LogLevel level, const std::string& className, const std::string& msg);
 };
 
 #endif //LOGGER_H

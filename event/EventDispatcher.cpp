@@ -35,7 +35,7 @@ void EventDispatcher::unsubscribe(const EventType eventType, EventListener *list
     listeners[eventType].remove(listener);
 }
 
-void EventDispatcher::dispatchDirect(std::shared_ptr<Event> ev) {
+void EventDispatcher::dispatchDirect(const std::shared_ptr<Event>& ev) {
     //TODO: Add event type to logging
     Logger::instance().trace("EventDispatcher", "Dispatching direct event");
     for(const auto listener : listeners[ev->eventType()]){

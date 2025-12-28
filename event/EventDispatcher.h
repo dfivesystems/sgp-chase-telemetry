@@ -24,7 +24,7 @@ public:
         return i;
     }
     ~EventDispatcher();
-    void dispatchDirect(std::shared_ptr<Event> ev);
+    void dispatchDirect(const std::shared_ptr<Event>& ev);
     void dispatchAsync(std::shared_ptr<Event> ev);
     void subscribe(EventType eventType, EventListener* listener);
     void unsubscribe(EventType eventType, EventListener* listener);

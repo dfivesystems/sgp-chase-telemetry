@@ -18,7 +18,7 @@ namespace ansi {
     constexpr const char* cyan    = "\033[36m";
 }
 
-const char* Logger::levelToString(LogLevel level) {
+const char* Logger::levelToString(const LogLevel level) {
     switch (level) {
         case LogLevel::TRACE:    return "TRACE";
         case LogLevel::DEBUG:    return "DEBUG";
@@ -30,7 +30,7 @@ const char* Logger::levelToString(LogLevel level) {
     }
 }
 
-const char* Logger::levelColor(LogLevel level) {
+const char* Logger::levelColor(const LogLevel level) {
     switch (level) {
         case LogLevel::TRACE:    return ansi::cyan;
         case LogLevel::DEBUG:    return ansi::blue;
@@ -67,31 +67,31 @@ Logger &Logger::instance() {
     return l;
 }
 
-void Logger::trace(std::string className, std::string msg) {
+void Logger::trace(const std::string& className, const std::string& msg) {
     writeLog(LogLevel::TRACE, className, msg);
 }
 
-void Logger::debug(std::string className, std::string msg) {
+void Logger::debug(const std::string& className, const std::string& msg) {
     writeLog(LogLevel::DEBUG, className, msg);
 }
 
-void Logger::info(std::string className, std::string msg) {
+void Logger::info(const std::string& className, const std::string& msg) {
     writeLog(LogLevel::INFO, className, msg);
 }
 
-void Logger::warn(std::string className, std::string msg) {
+void Logger::warn(const std::string& className, const std::string& msg) {
     writeLog(LogLevel::WARN, className, msg);
 }
 
-void Logger::error(std::string className, std::string msg) {
+void Logger::error(const std::string& className, const std::string& msg) {
     writeLog(LogLevel::ERROR, className, msg);
 }
 
-void Logger::critical(std::string className, std::string msg) {
+void Logger::critical(const std::string& className, const std::string& msg) {
     writeLog(LogLevel::CRITICAL, className, msg);
 }
 
-void Logger::writeLog(LogLevel level, std::string className, std::string msg) {
+void Logger::writeLog(const LogLevel level, const std::string& className, const std::string& msg) {
     std::stringstream oss;
     oss << ansi::green << iso8601Now() << ansi::reset << " ";
     oss << levelColor(level)

@@ -1,7 +1,7 @@
 #ifndef NMEAUTILS_H
 #define NMEAUTILS_H
 
-double nmeaPositionToDecimal(const std::string& nmeaCoordinate, const std::string& direction) {
+inline double nmeaPositionToDecimal(const std::string& nmeaCoordinate, const std::string& direction) {
     double degrees = 0.0;
 
     if (nmeaCoordinate.size() > 2) {

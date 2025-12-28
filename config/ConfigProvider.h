@@ -1,7 +1,6 @@
 #ifndef CONFIGPROVIDER_H
 #define CONFIGPROVIDER_H
 
-#include <boost/json.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>

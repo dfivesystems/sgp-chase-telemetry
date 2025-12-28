@@ -1,7 +1,7 @@
 {
   "assetName": "CCM",
   "riedelBoatNumber": 1,
-  "serialPort": "/dev/ttyACM0",
+  "serialPort": "/dev/pts/5",
   "influxAddress": "http://grafana.sgp.riedel.events",
   "mdssAddress": "10.111.0.1",
   "plotterAddress": "172.16.1.31",

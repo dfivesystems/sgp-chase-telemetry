@@ -149,7 +149,7 @@ void GnssReader::handleUbx(const std::string& sentence) {
             const double ageC = strtod(split[13].c_str(), nullptr);
             const double hdop = strtod(split[14].c_str(), nullptr);
 
-            auto ev = std::make_shared<GNSSPositionEvent>();
+            const auto ev = std::make_shared<GNSSPositionEvent>();
             ev->latitude = lat;
             ev->longitude = lon;
             ev->altitude = alt;
@@ -177,8 +177,8 @@ void GnssReader::handleUbx(const std::string& sentence) {
     }
 }
 
-void GnssReader::handleRmc(const std::string& talker, const std::string& line) {
-    const auto split = splitString(line, ',');
+void GnssReader::handleRmc(const std::string& talker, const std::string& sentence) {
+    const auto split = splitString(sentence, ',');
 
     const double lat = nmeaPositionToDecimal(split[2], split[3]);
     const double lon = nmeaPositionToDecimal(split[4], split[5]);
