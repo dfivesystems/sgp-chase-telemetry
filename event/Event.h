@@ -1,8 +1,8 @@
 #ifndef EVENT_H
 #define EVENT_H
+#include <cmath>
 #include <iostream>
 #include <vector>
-#include <cmath>
 
 enum EventType{
     NONE = 0,
@@ -13,7 +13,9 @@ enum EventType{
     GNSS_TOD,
     RTK_CORRECTION,
     COURSE_UPDATE,
-    ASSET_POSITION
+    ASSET_POSITION,
+    RAG_STATUS,
+    COMMITTEE_MESSAGE
 };
 
 enum GNSSSatelliteConstellation {
@@ -26,6 +28,12 @@ enum GNSSSatelliteConstellation {
     NAVIC,
     INS,
     COMBINED
+};
+
+enum RAGStatus {
+    RED = 0,
+    AMBER,
+    GREEN
 };
 
 struct Event {
@@ -113,6 +121,14 @@ struct CourseUpdateEvent final: Event {
 };
 
 struct AssetPositionEvent final: Event {
+
+};
+
+struct RAGStatusEvent final: Event {
+
+};
+
+struct CommitteeMessageEvent final: Event {
 
 };
 
