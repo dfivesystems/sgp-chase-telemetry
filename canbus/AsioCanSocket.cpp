@@ -326,7 +326,7 @@ void AsioCanSocket::asyncWriteHandler(const boost::system::error_code &ec, const
 
 uint32_t AsioCanSocket::generateHeader(const uint32_t pgn, const uint8_t remoteAddress, const uint8_t priority) const{
     uint32_t can_id = 0;
-    uint8_t pf = (pgn >> 8) & 0xFF;
+    const uint8_t pf = (pgn >> 8) & 0xFF;
     uint8_t ps;
     if (pf < 240) {
         ps = remoteAddress;
@@ -337,7 +337,7 @@ uint32_t AsioCanSocket::generateHeader(const uint32_t pgn, const uint8_t remoteA
     can_id |= (priority & 0x7) << 26;
     can_id |= (pgn & 0x1FFFF) << 8;
     can_id &= ~(0xFF << 8);
-    can_id |= (uint32_t)ps << 8;
+    can_id |= static_cast<uint32_t>(ps) << 8;
     can_id |= localAddress_;
 
     return can_id;
@@ -352,7 +352,7 @@ can_frame AsioCanSocket::generateFrame(const uint32_t pgn, const uint8_t remoteA
     return frame;
 }
 
-void AsioCanSocket::notifyMessage(std::shared_ptr<Event> ev) {
+void AsioCanSocket::notifyMessage(const std::shared_ptr<Event> ev) {
     if (ev->eventType() == POSITION) {
         handlePositionEvent(std::dynamic_pointer_cast<PositionEvent>(ev));
     }
