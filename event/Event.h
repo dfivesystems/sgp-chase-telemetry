@@ -28,97 +28,64 @@ enum GNSSSatelliteConstellation {
     COMBINED
 };
 
-class Event {
-public:
+struct Event {
     virtual ~Event() = default;
     EventType eventType() const {return eventType_;};
 protected:
     EventType eventType_ = NONE;
 };
-
-class PropertyRecord {
-public:
-    PropertyRecord();
+///
+/// Property records represent an individual value instance for a NMEA property
+///
+struct PropertyRecord {
     PropertyRecord(const std::string& propertyUid, const std::string& instance, const std::string& value);
-
-    std::string propertyUid();
-    std::string instance();
-    std::string value();
-private:
-    std::string propertyUid_;
-    std::string instance_;
-    std::string value_;
+    std::string propertyUid;
+    std::string instance;
+    std::string value;
 };
-
-class NMEAPropertyEvent: public Event {
-public:
+///
+///A NMEA Property even is used for processing the PGNs coming of the bus. It contains all the processed values
+/// as presented by the bus, with dictionaries applied where necessary
+///
+struct NMEAPropertyEvent final: Event {
     explicit NMEAPropertyEvent(const std::string& deviceUid);
-    std::string deviceUid();
+    std::string deviceUid;
     std::vector<PropertyRecord> values();
     void addValue(const std::string& propertyUid, const std::string& instance, const std::string& value);
-
 private:
-    std::string deviceUid_;
     std::vector<PropertyRecord> values_;
 };
-
-class NMEABusEvent: public Event {
-public:
-    NMEABusEvent(const std::string& deviceUid, const std::string& propertyUid,
-                        const std::string& propertyInstance, const std::string& value);
-    std::string deviceUid();
-    std::string propertyUid();
-    std::string propertyInstance();
-    std::string propertyValue();
-
-private:
-    std::string deviceUid_;
-    std::string propertyUid_;
-    std::string propertyInstance_;
-    std::string value_;
+///
+/// A NMEA PGN Event is used for sending values to the N2K Bus. The pgn should be set to the required PGN number
+/// and the fields vector should contain the full list of fields used in the PGN
+///
+struct NMEAPGNEvent final: Event {
+    NMEAPGNEvent();
+    std::string pgn;
+    std::vector<std::string> values;
 };
 
-class GNSSPositionEvent: public Event {
-public:
+///
+/// GNSS Position events are used to send the raw position information from either the N183 or N2k inputs to the
+/// location provider for processing. The location provider then sends these to the relevant outputs (N2K, MDSS, influx)
+///
+struct GNSSPositionEvent final : Event {
     GNSSPositionEvent();
-
-    [[nodiscard]] double latitude() const;
-    void setLatitude(double latitude);
-    [[nodiscard]] double longitude() const;
-    void setLongitude(double longitude);
-    [[nodiscard]] double altitude() const;
-    void setAltitude(double altitude);
-    [[nodiscard]] double hAccuracy() const;
-    void setHAccuracy(double h_accuracy);
-    [[nodiscard]] double vAccuracy() const;
-    void setVAccuracy(double v_accuracy);
-    [[nodiscard]] double speed() const;
-    void setSpeed(double speed);
-    [[nodiscard]] double heading() const;
-    void setHeading(double heading);
-    [[nodiscard]] double vVelocity() const;
-    void setVVelocity(double v_velocity);
-    [[nodiscard]] double correctionAge() const;
-    void setCorrectionAge(double correction_age);
-    [[nodiscard]] double hdop() const;
-    void setHdop(double hdop);
-    [[nodiscard]] GNSSSatelliteConstellation constellation() const;
-    void setConstellation(GNSSSatelliteConstellation constellation);
-
-private:
-    double latitude_ = NAN;
-    double longitude_ = NAN;
-    double altitude_ = NAN;
-    double hAccuracy_ = NAN;
-    double vAccuracy_ = NAN;
-    double speed_ = NAN;
-    double heading_ = NAN;
-    double vVelocity_ = NAN;
-    double correctionAge_ = NAN;
-    double hdop_ = NAN;
-    GNSSSatelliteConstellation constellation_ = UNKNOWN;
+    double latitude = NAN;
+    double longitude = NAN;
+    double altitude = NAN;
+    double hAccuracy = NAN;
+    double vAccuracy = NAN;
+    double speed = NAN;
+    double heading = NAN;
+    double vVelocity = NAN;
+    double correctionAge = NAN;
+    double hdop = NAN;
+    GNSSSatelliteConstellation constellation = UNKNOWN;
 };
 
+///
+/// GNSS Satellite records represent an individual satellite instance in a GSV or SatsInView Message
 struct GNSSSatelliteRecord {
     int satelliteId = 0;
     int elevation = 0;
@@ -126,41 +93,27 @@ struct GNSSSatelliteRecord {
     int snr = 0;
 };
 
-class GNSSSatellitesEvent: public Event {
-public:
+struct GNSSSatellitesEvent final : Event {
     GNSSSatellitesEvent();
-
-    void setSatsInView(int satsInView);
-    [[nodiscard]] int satsInView() const;
-    void addSatelliteRecord(GNSSSatelliteRecord record);
-    [[nodiscard]] std::vector<GNSSSatelliteRecord> satellites() const;
-    void setConstellation(GNSSSatelliteConstellation constellation);
-    [[nodiscard]] GNSSSatelliteConstellation constellation() const;
-
-private:
-    unsigned int satsInView_ = 0;
-    std::vector<GNSSSatelliteRecord> satellites_;
-    GNSSSatelliteConstellation constellation_ = GNSSSatelliteConstellation::GPS;
+    unsigned int satsInView = 0;
+    std::vector<GNSSSatelliteRecord> satellites;
+    GNSSSatelliteConstellation constellation = GNSSSatelliteConstellation::GPS;
 };
 
-class GNSSTodEvent: public Event {
-public:
-private:
+struct GNSSTodEvent final: Event {
+
 };
 
-class RTKCorrectionEvent: public Event {
-public:
-private:
+struct RTKCorrectionEvent final: Event {
+
 };
 
-class CourseUpdateEvent: public Event {
-public:
-private:
+struct CourseUpdateEvent final: Event {
+
 };
 
-class AssetPositionEvent: public Event {
-public:
-private:
+struct AssetPositionEvent final: Event {
+
 };
 
 #endif //EVENT_H
