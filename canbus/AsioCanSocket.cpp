@@ -238,38 +238,44 @@ void AsioCanSocket::handleCompleteMessage(CanMessage &msg) {
 }
 
 void AsioCanSocket::write(const uint32_t pgn, const uint8_t remoteAddress, const uint8_t priority, const uint8_t* data, const uint8_t dataSize){
+
     if(const auto dpc = N2KPropertyProvider::instance().getPropertyContainer(std::to_string(pgn)); nullptr != dpc && !dpc->singleFrame){
-        const int frameCount = static_cast<int>(std::ceil(dataSize / 7.0));
-        uint8_t packetId = 0b00100000;
-        const uint8_t payloadLen = dataSize;
+        static uint8_t seq = 0;
+        size_t offset = 0;
+        uint8_t frameNo = 0;
         uint8_t arr[8] = {};
-        arr[0] = packetId;
-        arr[1] = payloadLen;
-        arr[2] = data[0];
-        arr[3] = data[1];
-        arr[4] = data[2];
-        arr[5] = data[3];
-        arr[6] = data[4];
-        arr[7] = data[5];
-        const can_frame frame = generateFrame(pgn, remoteAddress, priority, arr);
-        //Write initial frame
-        writeRawFrame(frame);
-        int cnt = 6;
-        for(int fc = 1; fc < frameCount; fc++){
-            packetId += 1;
-            uint8_t fup[8] = {};
-            fup[0] = packetId;
-            for(int i = 1; i < 8; i++){
-                if(cnt < payloadLen){
-                    fup[i] = data[cnt];
-                } else {
-                    fup[i] = 0xFF;
-                }
-                cnt++;
-            }
-            const can_frame fFrame = generateFrame(pgn, remoteAddress, priority, fup);
-            writeRawFrame(fFrame);
+        for (int i = 0; i < 8; i++) arr[i] = 0xFF;
+        arr[0] = (uint8_t)((seq & 0x07 << 5) | (frameNo & 0x1f));
+        arr[1] = (uint8_t) dataSize;
+        size_t n0 = (dataSize < 6) ? dataSize : 6;
+        for (size_t i = 0; i < n0; i++) {
+            arr[2 + i] = data[i];
         }
+
+        offset += n0;
+        frameNo++;
+        const can_frame frame = generateFrame(pgn, remoteAddress, priority, arr);
+        writeRawFrame(frame);
+        while (offset < dataSize) {
+            uint8_t followUp[8];
+            for (int i = 0; i < 8; i++) followUp[i] = 0xFF;
+
+            followUp[0] = (uint8_t)(((seq & 0x07) << 5) | (frameNo & 0x1F));
+
+            size_t n = dataSize - offset;
+            if (n > 7) n = 7;
+
+            for (size_t i = 0; i < n; i++) {
+                followUp[1 + i] = data[offset + i];
+            }
+
+            offset += n;
+            frameNo++;
+
+            writeRawFrame(generateFrame(pgn, remoteAddress, priority, followUp));
+        }
+
+        seq = (uint8_t)((seq + 1) & 0x07);
     } else {
         const can_frame frame = generateFrame(pgn, remoteAddress, priority, data);
         writeRawFrame(frame);
@@ -313,21 +319,20 @@ void AsioCanSocket::handlePositionEvent(const std::shared_ptr<PositionEvent>& ev
 void AsioCanSocket::handleSatellitesEvent(const std::shared_ptr<GNSSSatellitesEvent>& ev) {
     static uint8_t sid = 0;
     std::vector<uint8_t> data;
-    data.reserve(3+ev->satsInView*6);
     data.push_back(sid);
     data.push_back(0x03 | 0xFC);
-    data.push_back(ev->satsInView & 0xFF);
+    data.push_back((uint8_t)(ev->satsInView & 0xFF));
     for (auto& sat : ev->satellites) {
         data.push_back(sat.satelliteId & 0xFF);
         int16_t elev = round(sat.elevation * 1e4 * 0.0174533);
-        data.push_back(elev & 0xFF);
-        data.push_back((elev >> 8) & 0xFF);
+        data.push_back((uint8_t)(elev & 0xFF));
+        data.push_back((uint8_t)((elev >> 8) & 0xFF));
         int16_t az = round(sat.azimuth * 1e4 * 0.0174533);
-        data.push_back(az & 0xFF);
-        data.push_back((az >> 8) & 0xFF);
+        data.push_back((uint8_t)(az & 0xFF));
+        data.push_back((uint8_t)((az >> 8) & 0xFF));
         const int16_t snr = sat.snr*100;
-        data.push_back(snr & 0xFF);
-        data.push_back((snr >> 8) & 0xFF);
+        data.push_back((uint8_t)(snr & 0xFF));
+        data.push_back((uint8_t(snr >> 8) & 0xFF));
         data.push_back(0xFF);
         data.push_back(0xFF);
         data.push_back(0xFF);
