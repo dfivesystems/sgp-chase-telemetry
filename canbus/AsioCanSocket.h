@@ -29,8 +29,9 @@ public:
     AsioCanSocket(const std::string& interfaceName, boost::asio::io_context& ioCtx);
     void writeRawFrame(can_frame frame);
     void readOperation();
-    uint32_t generateHeader(uint32_t pgn, uint8_t remoteAddress, uint8_t priority) const;
+    [[nodiscard]] uint32_t generateHeader(uint32_t pgn, uint8_t remoteAddress, uint8_t priority) const;
     can_frame generateFrame(uint32_t pgn, uint8_t remoteAddress, uint8_t priority, const uint8_t* data) const;
+
     void notifyMessage(std::shared_ptr<Event> ev) override;
 private:
     int sockFd_;
@@ -51,6 +52,7 @@ private:
     void write(uint32_t pgn, uint8_t remoteAddress, uint8_t priority, const uint8_t *data, uint8_t dataSize);
 
     void handlePositionEvent(const std::shared_ptr<PositionEvent>& ev);
+    void handleSatellitesEvent(const std::shared_ptr<GNSSSatellitesEvent>& ev);
 
     std::array<uint8_t, 8> calculateLocalName() const;
 

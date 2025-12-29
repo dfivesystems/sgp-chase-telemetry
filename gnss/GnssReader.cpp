@@ -225,12 +225,33 @@ void GnssReader::handleGsa(const std::string& talker, const std::string& sentenc
 }
 
 void GnssReader::handleGsv(const std::string& talker, const std::string& sentence) {
-    //TODO: Implement GSV
-    //TODO: Wait until all messages have been received then parse and send the response
-    const auto ev = std::make_shared<GNSSSatellitesEvent>();
-    ev->constellation = constellationFromTalker(talker);
+    const auto constellation = constellationFromTalker(talker);
+    const auto split = splitString(sentence, ',');
+    const auto& msgCnt = split[0];
+    const auto& msgNo = split[1];
+    if (msgNo == "1") {
+        if (svBuffer_.contains(constellation)) {
+            svBuffer_[constellation].clear();
+        } else {
+            svBuffer_[constellation] = {};
+        }
+    }
+    for (int i = 3; i<split.size()-1; i+=4) {
+        GNSSSatelliteRecord record;
+        record.satelliteId = strtol(split[i].c_str(), nullptr, 10);
+        record.elevation = strtol(split[i+1].c_str(), nullptr, 10);
+        record.azimuth = strtol(split[i+2].c_str(), nullptr, 10);
+        record.snr = strtol(split[i+3].c_str(), nullptr, 10);
+        svBuffer_[constellation].push_back(record);
+    }
+    if (msgCnt == msgNo) {
+        const auto ev = std::make_shared<GNSSSatellitesEvent>();
+        ev->constellation = constellation;
+        ev->satsInView = svBuffer_[constellation].size();
+        ev->satellites = svBuffer_[constellation];
+        EventDispatcher::instance().dispatchAsync(ev);
+    }
 
-    EventDispatcher::instance().dispatchAsync(ev);
 }
 
 void GnssReader::handleGll(const std::string& talker, const std::string& sentence) {

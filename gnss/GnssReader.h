@@ -1,5 +1,6 @@
 #ifndef GNSSREADER_H
 #define GNSSREADER_H
+#include <map>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/serial_port.hpp>
 #include <boost/asio/streambuf.hpp>
@@ -24,17 +25,18 @@ private:
 
     void readOperation();
     void readHandler(const boost::system::error_code &ec, std::size_t length);
-    static void handlePacket(const std::string& line);
+    void handlePacket(const std::string& line);
     static bool validateChecksum(const std::string& line);
 
     std::array<char, 1024> dataBuf_ = {};
     boost::asio::streambuf buffer_;
+    std::map<GNSSSatelliteConstellation, std::vector<GNSSSatelliteRecord>> svBuffer_;
 
     static void handleUbx(const std::string& sentence);
     static void handleRmc(const std::string& talker, const std::string& sentence);
     static void handleGga(const std::string& talker, const std::string& sentence);
     static void handleGsa(const std::string& talker, const std::string& sentence);
-    static void handleGsv(const std::string& talker, const std::string& sentence);
+    void handleGsv(const std::string& talker, const std::string& sentence);
     static void handleGll(const std::string& talker, const std::string& sentence);
     static void handleVtg(const std::string& talker, const std::string& sentence);
     static void handleTxt(const std::string &line);

@@ -4,11 +4,11 @@
 #include "../logging/Logger.h"
 
 //TODO: Implement instance naming
-//TODO: Test against real devices
 
 AsioCanSocket::AsioCanSocket(const std::string& interfaceName, boost::asio::io_context& ioCtx): stream_(ioCtx){
     Logger::instance().info("AsioCanSocket", "Opening CAN socket " + interfaceName);
     EventDispatcher::instance().subscribe(POSITION, this);
+    EventDispatcher::instance().subscribe(GNSS_SATELLITES, this);
     sockaddr_can addr{};
     ifreq ifr{};
 
@@ -310,6 +310,33 @@ void AsioCanSocket::handlePositionEvent(const std::shared_ptr<PositionEvent>& ev
     sid++;
 }
 
+void AsioCanSocket::handleSatellitesEvent(const std::shared_ptr<GNSSSatellitesEvent>& ev) {
+    static uint8_t sid = 0;
+    std::vector<uint8_t> data;
+    data.reserve(3+ev->satsInView*6);
+    data.push_back(sid);
+    data.push_back(0x03 | 0xFC);
+    data.push_back(ev->satsInView & 0xFF);
+    for (auto& sat : ev->satellites) {
+        data.push_back(sat.satelliteId & 0xFF);
+        int16_t elev = round(sat.elevation * 1e4 * 0.0174533);
+        data.push_back(elev & 0xFF);
+        data.push_back((elev >> 8) & 0xFF);
+        int16_t az = round(sat.azimuth * 1e4 * 0.0174533);
+        data.push_back(az & 0xFF);
+        data.push_back((az >> 8) & 0xFF);
+        const int16_t snr = sat.snr*100;
+        data.push_back(snr & 0xFF);
+        data.push_back((snr >> 8) & 0xFF);
+        data.push_back(0xFF);
+        data.push_back(0xFF);
+        data.push_back(0xFF);
+        data.push_back(0x7F);
+        data.push_back(0xFF);
+    }
+    write(129540, 255, 6, data.data(), data.size());
+}
+
 void AsioCanSocket::writeRawFrame(can_frame frame){
     stream_.async_write_some(boost::asio::buffer(&frame, sizeof(frame)),
                             [&](const boost::system::error_code &ec,
@@ -355,5 +382,8 @@ can_frame AsioCanSocket::generateFrame(const uint32_t pgn, const uint8_t remoteA
 void AsioCanSocket::notifyMessage(const std::shared_ptr<Event> ev) {
     if (ev->eventType() == POSITION) {
         handlePositionEvent(std::dynamic_pointer_cast<PositionEvent>(ev));
+    }
+    if (ev->eventType() == GNSS_SATELLITES) {
+        handleSatellitesEvent(std::dynamic_pointer_cast<GNSSSatellitesEvent>(ev));
     }
 }

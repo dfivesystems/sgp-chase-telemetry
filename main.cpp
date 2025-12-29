@@ -31,7 +31,7 @@ int main() {
     });
     LocationProvider locationProvider(ioCtx);
     GnssReader reader(ioCtx, ConfigProvider::instance().serialPort());
-    AsioCanSocket canSkt("vcan0", ioCtx);
+    AsioCanSocket canSkt("can0", ioCtx);
 
     ioThread.join();
     return 0;

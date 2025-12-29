@@ -33,10 +33,10 @@ void LocationProvider::notifyMessage(const std::shared_ptr<Event> ev) {
 }
 
 LocationSourceEntry* LocationProvider::fixIsValid() {
-	for (int i = 0; i < locationSources_.size(); i++) {
+	for (auto & locationSource : locationSources_) {
 		//TODO: Make this more sophisticated
-		if (!std::isnan(locationSources_[i].latitude) && !std::isnan(locationSources_[i].longitude)) {
-			return &locationSources_[i];
+		if (!std::isnan(locationSource.latitude) && !std::isnan(locationSource.longitude)) {
+			return &locationSource;
 		}
 	}
 	return nullptr;
@@ -44,7 +44,6 @@ LocationSourceEntry* LocationProvider::fixIsValid() {
 
 void LocationProvider::timeout(const boost::system::error_code& ec) {
 	//TODO: Error handling
-
 	//Work out if we have a valid GPS fix and send a packet to N2K, influx and MDSS if we do
 	if (const LocationSourceEntry* src = fixIsValid()) {
 		const auto ev = std::make_shared<PositionEvent>();
@@ -62,9 +61,9 @@ void LocationProvider::timeout(const boost::system::error_code& ec) {
 }
 
 LocationSourceEntry* LocationProvider::getOrCreateSource(const GNSSSource source) {
-	for (int i = 0; i < locationSources_.size(); i++) {
-		if (locationSources_[i].source == source) {
-			return &locationSources_[i];
+	for (auto& locationSource : locationSources_) {
+		if (locationSource.source == source) {
+			return &locationSource;
 		}
 	}
 	LocationSourceEntry entry;
