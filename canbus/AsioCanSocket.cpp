@@ -36,7 +36,7 @@ void AsioCanSocket::readOperation(){
                                     J1939Frame msg(recFrame_);
                                     handleMessage(msg);
                                 } else {
-                                    Logger::instance().error("AsioCanSocket", "CAN Receive error");
+                                    Logger::instance().error("AsioCanSocket", "CAN Receive error - " + ec.message());
                                 }
                                 this->readOperation();
                             });
@@ -320,7 +320,7 @@ void AsioCanSocket::asyncWriteHandler(const boost::system::error_code &ec, const
     if(!ec){
         Logger::instance().trace("AsioCanSocket", std::to_string(transferred) + " bytes written to socket successfully");
     } else {
-        Logger::instance().error("AsioCanSocket", "CAN error while writing to socket" + ec.message());
+        Logger::instance().error("AsioCanSocket", "CAN error while writing to socket - " + ec.message());
     }
 }
 

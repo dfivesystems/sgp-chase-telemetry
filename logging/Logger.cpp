@@ -1,43 +1,50 @@
 #include "Logger.h"
 
-#include <iostream>
-#include <sstream>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
 
 //TODO: Selective log levels
 
 namespace ansi {
-    constexpr const char* reset   = "\033[0m";
-    constexpr const char* green   = "\033[32m";
-    constexpr const char* yellow  = "\033[33m";
-    constexpr const char* blue    = "\033[34m";
-    constexpr const char* red     = "\033[31m";
-    constexpr const char* magenta = "\033[35m";
-    constexpr const char* cyan    = "\033[36m";
+    constexpr auto reset   = "\033[0m";
+    constexpr auto green   = "\033[32m";
+    constexpr auto yellow  = "\033[33m";
+    constexpr auto blue    = "\033[34m";
+    constexpr auto red     = "\033[31m";
+    constexpr auto magenta = "\033[35m";
+    constexpr auto cyan    = "\033[36m";
+}
+
+LogLevel Logger::checkLevel(const std::string& className) const {
+    if (levels.contains(className)) {
+        return levels.at(className);
+    }
+    return baseLevel;
 }
 
 const char* Logger::levelToString(const LogLevel level) {
     switch (level) {
-        case LogLevel::TRACE:    return "TRACE";
-        case LogLevel::DEBUG:    return "DEBUG";
-        case LogLevel::INFO:     return "INFO";
-        case LogLevel::WARN:     return "WARN";
-        case LogLevel::ERROR:    return "ERROR";
-        case LogLevel::CRITICAL: return "CRITICAL";
+        case TRACE:    return "TRACE";
+        case DEBUG:    return "DEBUG";
+        case INFO:     return "INFO";
+        case WARN:     return "WARN";
+        case ERROR:    return "ERROR";
+        case CRITICAL: return "CRITICAL";
         default:                 return "UNKNOWN";
     }
 }
 
 const char* Logger::levelColor(const LogLevel level) {
     switch (level) {
-        case LogLevel::TRACE:    return ansi::cyan;
-        case LogLevel::DEBUG:    return ansi::blue;
-        case LogLevel::INFO:     return ansi::green;
-        case LogLevel::WARN:     return ansi::yellow;
-        case LogLevel::ERROR:    return ansi::red;
-        case LogLevel::CRITICAL: return ansi::magenta;
+        case TRACE:    return ansi::cyan;
+        case DEBUG:    return ansi::blue;
+        case INFO:     return ansi::green;
+        case WARN:     return ansi::yellow;
+        case ERROR:    return ansi::red;
+        case CRITICAL: return ansi::magenta;
         default:                 return ansi::reset;
     }
 }
@@ -67,28 +74,44 @@ Logger &Logger::instance() {
     return l;
 }
 
-void Logger::trace(const std::string& className, const std::string& msg) {
-    writeLog(LogLevel::TRACE, className, msg);
+void Logger::trace(const std::string& className, const std::string& msg) const {
+    if (checkLevel(className) <= TRACE) {
+        writeLog(TRACE, className, msg);
+    }
 }
 
-void Logger::debug(const std::string& className, const std::string& msg) {
-    writeLog(LogLevel::DEBUG, className, msg);
+void Logger::debug(const std::string& className, const std::string& msg) const {
+    if (checkLevel(className) <= DEBUG) {
+        writeLog(DEBUG, className, msg);
+    }
 }
 
-void Logger::info(const std::string& className, const std::string& msg) {
-    writeLog(LogLevel::INFO, className, msg);
+void Logger::info(const std::string& className, const std::string& msg) const {
+    if (checkLevel(className) <= INFO) {
+        writeLog(INFO, className, msg);
+    }
 }
 
-void Logger::warn(const std::string& className, const std::string& msg) {
-    writeLog(LogLevel::WARN, className, msg);
+void Logger::warn(const std::string& className, const std::string& msg) const {
+    if (checkLevel(className) <= WARN) {
+        writeLog(WARN, className, msg);
+    }
 }
 
-void Logger::error(const std::string& className, const std::string& msg) {
-    writeLog(LogLevel::ERROR, className, msg);
+void Logger::error(const std::string& className, const std::string& msg) const {
+    if (checkLevel(className) <= ERROR) {
+        writeLog(ERROR, className, msg);
+    }
 }
 
-void Logger::critical(const std::string& className, const std::string& msg) {
-    writeLog(LogLevel::CRITICAL, className, msg);
+void Logger::critical(const std::string& className, const std::string& msg) const {
+    if (checkLevel(className) <= CRITICAL) {
+        writeLog(CRITICAL, className, msg);
+    }
+}
+
+Logger::Logger() {
+    levels["GnssReader"] = TRACE;
 }
 
 void Logger::writeLog(const LogLevel level, const std::string& className, const std::string& msg) {

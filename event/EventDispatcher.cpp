@@ -25,7 +25,6 @@ EventDispatcher::~EventDispatcher() {
 void EventDispatcher::subscribe(const EventType eventType, EventListener *listener) {
     //TODO: Add event type to logging
     Logger::instance().debug("EventDispatcher", "Adding listener");
-    std::cout << "Adding listener" << std::endl;
     listeners[eventType].emplace_back(listener);
 }
 

@@ -1,29 +1,35 @@
 #ifndef LOGGER_H
 #define LOGGER_H
+#include <map>
 #include <string>
+
+enum LogLevel {
+    TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL
+};
 
 class Logger {
 public:
     static Logger& instance();
 
-    static void trace(const std::string& className, const std::string& msg);
-    static void debug(const std::string& className, const std::string& msg);
-    static void info(const std::string& className, const std::string& msg);
-    static void warn(const std::string& className, const std::string& msg);
-    static void error(const std::string& className, const std::string& msg);
-    static void critical(const std::string& className, const std::string& msg);
+    void trace(const std::string& className, const std::string& msg) const;
+    void debug(const std::string& className, const std::string& msg) const;
+    void info(const std::string& className, const std::string& msg) const;
+    void warn(const std::string& className, const std::string& msg) const;
+    void error(const std::string& className, const std::string& msg) const;
+    void critical(const std::string& className, const std::string& msg) const;
 
 private:
-    Logger() = default;
+    Logger();
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 
-    enum LogLevel {
-        TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL
-    };
+    LogLevel baseLevel = INFO;
+    std::map<std::string, LogLevel> levels;
 
-    static const char *levelToString(::Logger::LogLevel level);
-    static const char *levelColor(::Logger::LogLevel level);
+    [[nodiscard]] LogLevel checkLevel(const std::string& className) const;
+
+    static const char *levelToString(LogLevel level);
+    static const char *levelColor(LogLevel level);
     static std::string iso8601Now();
 
     static void writeLog(LogLevel level, const std::string& className, const std::string& msg);
